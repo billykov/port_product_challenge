@@ -69,12 +69,28 @@ jobs:
               "repository": "${{ inputs.service_name }}"
             }
 
-      - name: Create a log message
+            
+      - name: Report success to Port
+        if:     success()
+        uses:   port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(inputs.port_context).runId }}
+          status: SUCCESS
+          logMessage: "Finished scaffolding of service and repository: ${{ inputs.service_name }} ✅"
+
+      - name: Report failure to Port
+        if:   failure()
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
-          runId: ${{ env.PORT_RUN_ID }}
-          logMessage: "Finished scaffolding of service and repository: ${{ inputs.service_name }}"
+          runId: ${{ fromJson(inputs.port_context).runId }}
+          status: FAILURE
+          logMessage: "Failed to scaffold service: ${{ inputs.service_name }} ❌"
+      
